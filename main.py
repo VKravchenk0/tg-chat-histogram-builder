@@ -22,7 +22,7 @@ def normalize_from_field(input):
     return remove_emoji(input).replace(' ', '\n')
 
 
-def build_name_message_number_dictionary(data):
+def build_username_messages_count_dictionary(data):
     """
     Builds a dictionary with username as a key and number of messages from this user as a value
     :param data: json data with telegram chat export results
@@ -43,7 +43,7 @@ def build_name_message_number_dictionary(data):
     return result_dict
 
 
-def trim_results(input):
+def trim_members(input):
     """
     Returns the last MEMBERS_NUMBER records from the input dictionary
     """
@@ -56,8 +56,8 @@ def trim_results(input):
     return result
 
 
-def sort_dictionary_by_value(input, reverse=False):
-    return dict(sorted(input.items(), key=lambda item: item[1], reverse=reverse))
+def sort_dictionary_by_messages_count(input):
+    return dict(sorted(input.items(), key=lambda item: item[1]))
 
 
 def show_histogram(input_dict):
@@ -71,10 +71,10 @@ def show_histogram(input_dict):
 with open('result.json') as json_file:
     data = json.load(json_file)
 
-    result_dict = build_name_message_number_dictionary(data)
+    all_members_dict = build_username_messages_count_dictionary(data)
 
-    sorted_dict = sort_dictionary_by_value(result_dict)
+    sorted_dict = sort_dictionary_by_messages_count(all_members_dict)
 
-    sorted_trimmed_dict = trim_results(sorted_dict)
+    sorted_trimmed_dict = trim_members(sorted_dict)
 
     show_histogram(sorted_trimmed_dict)
