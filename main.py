@@ -22,25 +22,11 @@ def normalize_from_field(input):
     return remove_emoji(input).replace(' ', '\n')
 
 
-def trim_results(input):
-    result = {}
-    j = 1
-    for i in input:
-        if j >= MEMBERS_NUMBER:
-            break
-        result[i] = input[i]
-        j = j + 1
-
-    return result
-
-
-def sort_dictionary_by_value(input, reverse=False):
-    return dict(sorted(input.items(), key=lambda item: item[1], reverse=reverse))
-
-
-# Substitute result of telegram chat json export. Tested only with text-only export, without photos/videos etc
-with open('result_test.json') as json_file:
-    data = json.load(json_file)
+def build_name_message_number_dictionary(data):
+    """
+    Builds a dictionary with username as a key and number of messages from this user as a value
+    :param data: json data with telegram chat export results
+    """
     result_dict = {}
     for message in data["messages"]:
         if "from" not in message or message["from"] is None:
@@ -54,18 +40,41 @@ with open('result_test.json') as json_file:
             # increment
             result_dict[from_field] = result_dict[from_field] + 1
 
-    # sorting records  by the number of messages
-    sorted_dict = sort_dictionary_by_value(result_dict, reverse=True)
-
-    sorted_trimmed_dict = trim_results(sorted_dict)
-
-    for i in sorted_trimmed_dict:
-        print(i, sorted_trimmed_dict[i])
+    return result_dict
 
 
-    sorted_trimmed_reversed = sort_dictionary_by_value(sorted_trimmed_dict)
+def trim_results(input):
+    """
+    Returns the last MEMBERS_NUMBER records from the input dictionary
+    """
+    input_length = len(input)
+    last_n_results = list(input.items())[input_length - MEMBERS_NUMBER: input_length]
+    result = {}
+    for item in last_n_results:
+        result[item[0]] = item[1]
 
-    plt.bar(list(sorted_trimmed_reversed.keys()), sorted_trimmed_reversed.values(), color='purple')
+    return result
+
+
+def sort_dictionary_by_value(input, reverse=False):
+    return dict(sorted(input.items(), key=lambda item: item[1], reverse=reverse))
+
+
+def show_histogram(input_dict):
+    plt.bar(list(input_dict.keys()), input_dict.values(), color='purple')
     plt.tight_layout()
     plt.ylabel('Кількість повідомлень', fontsize=13)
     plt.show()
+
+
+# Substitute result of telegram chat json export. Tested only with text-only export, without photos/videos etc
+with open('result.json') as json_file:
+    data = json.load(json_file)
+
+    result_dict = build_name_message_number_dictionary(data)
+
+    sorted_dict = sort_dictionary_by_value(result_dict)
+
+    sorted_trimmed_dict = trim_results(sorted_dict)
+
+    show_histogram(sorted_trimmed_dict)
